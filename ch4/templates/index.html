@@ -1,0 +1,237 @@
+<!Doctype html>
+<html lang="ko">
+
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+            integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l"
+            crossorigin="anonymous">
+
+		<!-- JS -->
+        <!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"></script> -->
+        <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous"></script>
+
+        <!-- 구글폰트 -->
+        <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+
+        <title>SW사관학교 정글 | 나홀로 메모장</title>
+
+        <!-- style -->
+        <style type="text/css">
+            * {
+                font-family: "Stylish", sans-serif;
+            }
+
+            .wrap {
+                width: 900px;
+                margin: auto;
+            }
+
+            .comment {
+                color: blue;
+                font-weight: bold;
+            }
+
+            .postcontent{
+                width: 500px;   
+                margin : 20px,0,20px,0;
+            }
+
+            .button1{
+                border-radius: 10px;
+                background-color:dodgerblue;
+            }
+            .button2{
+                border-radius: 10px;
+                background-color:indianred;
+            }
+
+
+        </style>
+        <script>
+            
+            $(document).ready(function () {
+                $("#cards-box").html("");
+                showArticles();
+            });
+
+
+            
+// 같은 id 가진 것들이 너무 많아 한가지 카드의 버튼만 동작하여 "좋아요 수" "삭제"도 맨 앞에 카드만 실행되는데 해결 못함
+            function deleteCard(){
+                
+                // 카드 삭제
+                $('#postcard').remove(); 
+
+                //데이터 삭제
+                let title = $("#cardTitle").text();
+
+                $.ajax({
+                    type: "POST", 
+                    url: "/delete", 
+                    data: {title_give: title}, 
+                    success: function (response) { 
+                        if (response["result"] == "success") {
+                            alert("삭제 성공!");
+                
+                        } 
+                    }
+                })
+             }
+
+            function updateCard(){
+
+                $("#cardTitle").val("수정");
+                $("cardComment").val("수정");
+
+                
+
+
+            }
+
+// 좋아요 수 증가하여 db좋아요 수 바꾸기까지 했지만 그 수를 다시 가져와서 text바꾸는 것이 안됨
+             function getLikes(){
+
+                let title = $("#cardTitle").text();
+
+                $.ajax({
+                    type: "POST", 
+                    url: "/likes", 
+                    data: {title_give: title}, 
+                    success: function (response) { 
+                        if (response["result"] == "success") {
+                            alert("좋아요");}
+                }})}
+
+
+
+                // $.ajax({
+                //         type: "GET",
+                //         url: "/likes",
+                //         data: {},
+                //         success: function (response) {
+                //             let memos = response['memos'];
+                //             for (let i = 0; i < memos.length; i++) {
+                //                 let likes = memos[i]['likes'];
+                //                 $('#numLikes').text(likes);
+                //             }
+                //         }
+                //     }) 
+
+
+
+
+            function postArticle() {
+                let title = $("#post-title").val();
+                let comment = $("#post-comment").val();
+                let likes = $('#numLikes').text();
+
+
+                $.ajax({
+                    type: "POST",
+                    url: "/memo", 
+                    data: {title_give: title, comment_give: comment, likes_give: likes}, 
+                    success: function (response) { 
+                        if (response["result"] == "success") {
+                            alert("포스팅 성공!");
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류!")
+                        }
+                    }
+                })
+            }
+
+            function showArticles() {
+                $.ajax({
+                    type: "GET",
+                    url: "/memo",
+                    data: {},
+                    success: function (response) {
+                        let memos = response['memos'];
+                        for (let i = 0; i < memos.length; i++) {
+                            let title = memos[i]['title'];
+                            let comment = memos[i]['comment'];
+                            makeCard(title, comment);
+                        }
+                    }
+                })
+            }
+
+            function makeCard(title, comment) {
+                let tempHtml = 
+                    `<div class="card" id="postcard">
+                        <div  class = "card-body" >
+                            <p id = "cardTitle" class="card-title">${title}</p>
+                            <p id = "cardComment" class="card-text comment">${comment}</p>
+                            
+                            <div #numLikes>0</div>
+
+                            <div class ="container">
+                                <button class ="button1" type="button">수정</button>
+                                <button class = "button2 " type="button" onclick="deleteCard()">삭제</button>
+                                <button type="button" class="btn btn-link" onclick="getLikes()"><i class="fa fa-thumbs-up"></i>좋아요!</button>
+                            </div>
+                        </div>
+                    </div>`;
+                $("#cards-box").append(tempHtml);
+
+            } 
+
+            
+        </script>
+
+    </head>
+
+    <body>
+        <div class="wrap">
+            <div class="jumbotron">
+                <h1 class="display-4">나홀로 링크 메모장!</h1>
+                <h1>ver2.0</h1>
+
+                <input id="post-title" class="form-control postcontent" placeholder="제목을 입력하세요">
+                <textarea id="post-comment" class="form-control postcontent" rows="2" placeholder="내용을 입력하세요"></textarea>
+                
+                <p class="lead">
+                    <button type="button" class="btn btn-primary" onclick="postArticle()">저장하기</button>
+                </p>
+
+                
+            
+
+        
+            <div id="cards-box" class="card-columns">
+                <div class="card" id = "postcard">
+                    <div id = "cardBody" class = "card-body">
+                        <p id = "cardTitle" class="card-title">여기 기사 제목이 들어가죠</p>
+                        <p id = "cardComment" class="card-text comment">여기에 코멘트가 들어갑니다.</p>
+
+                        <div id = "numLikes">0</div>
+
+                        <div class ="container">
+                            <button class ="button1" type="button" onclick="updateCard">수정</button>
+                            <button class = "button2 " type="button" onclick="deleteCard()">삭제</button>
+                            <button type="button" class="btn btn-link" onclick="getLikes()"><i class="fa fa-thumbs-up"></i>좋아요!</button>
+                        
+                        </div>
+                        
+                    </div>
+                </div>
+
+                
+            </div>
+
+        </div>
+    </body>
+
+</html>
